@@ -33,9 +33,9 @@ return Dict(1=>1:500, 2=>501:1500)
 function get_range_dataset(dna_datasets)
     cum_len = [length(dna_datasets[i].dna_reads) 
                     for i in 1:length(dna_datasets)] |> cumsum
-    read_range = Dict(1=>1:cum_len[1])
+    read_range = Dict(1:cum_len[1]=>1)
     for i in 2:length(dna_datasets)
-        read_range[i] = cum_len[i-1]+1:cum_len[i]
+        read_range[cum_len[i-1]+1:cum_len[i]] = i
     end
     return read_range
 end

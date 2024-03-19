@@ -8,7 +8,13 @@ using Test
     test_3 = "jaspar/MA1351.1.sites"
 
     trim_len=30
+
+    dna_datasets = dna_data.([test_1]; trim=trim_len)
+    f_dna_data = fullstack_dna_dataset{Float16}(dna_datasets)
+
     dna_datasets = dna_data.([test_1, test_2, test_3]; trim=trim_len)
     @test all([i.len for i in dna_datasets] .== 115-2*trim_len)
     f_dna_data = fullstack_dna_dataset{Float16}(dna_datasets)
+
+
 end

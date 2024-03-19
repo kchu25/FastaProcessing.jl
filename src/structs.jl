@@ -26,6 +26,7 @@ function trim_dna_reads!(dna_reads::Vector{String}, dna_heads::Vector{String}, n
     @assert n < length(dna_reads[1]) ÷ 2 "n should be less than the half the length of the reads"
     for i in 1:length(dna_reads)
         shortened_read = dna_reads[i][n+1:end-n]
+        # so only get rid of that shortened-read if it has an n or N in it
         if !occursin("N", shortened_read) && !occursin("n", shortened_read)
             keep[i] = true
             dna_reads[i] =shortened_read
@@ -57,7 +58,7 @@ useful for
 struct combined_dna_dataset{F}
     dna_datasets::Vector{dna_data}
     # data_matrix::Array{F, 3}
-    read_range::Dict{Int, UnitRange{Int}}
+    read_range::Dict{UnitRange{Int}, Int}
     L::Int
     function combined_dna_dataset{F}(dna_datasets::Vector{dna_data}) where {F <: Real}
         lens = [dna_datasets[i].len for i in 1:length(dna_datasets)]
@@ -81,12 +82,13 @@ function make_data_matrices(cdna_datasets; train_test_ratio=0.9, k_freq=1)
         get_shuffled_train_test_inds(cat_reads; gamma=train_test_ratio)
     data_matrix = data_2_dummy(cat_reads);
     data_matrix_bg = data_2_dummy(seq_shuffle.(cat_reads, k=k_freq))
-    data_matrix_shuffled            = @view data_matrix[:, :, train_set_inds]
-    data_matrix_shuffled_bg         = @view data_matrix_bg[:, :, train_set_inds]
+    data_matrix_shuffled_train      = @view data_matrix[:, :, train_set_inds]
+    data_matrix_shuffled_train_bg   = @view data_matrix_bg[:, :, train_set_inds]
     data_matrix_shuffled_test       = @view data_matrix[:, :, test_set_inds]
     data_matrix_shuffled_test_bg    = @view data_matrix_bg[:, :, test_set_inds]
     return data_matrix, data_matrix_bg, 
-           data_matrix_shuffled, data_matrix_shuffled_bg, 
+           train_set_inds, test_set_inds,
+           data_matrix_shuffled_train, data_matrix_shuffled_train_bg, 
            data_matrix_shuffled_test, data_matrix_shuffled_test_bg
 end
 
@@ -94,8 +96,10 @@ struct fullstack_dna_dataset{F}
     cdna_datasets::combined_dna_dataset{F}
     data_matrix_full::Array{F, 3}
     data_matrix_bg::Array{F, 3}
-    data_matrix_shuffled::AbstractArray{F, 3}
-    data_matrix_shuffled_bg::AbstractArray{F, 3}
+    train_set_inds::Vector{Int}
+    test_set_inds::Vector{Int}
+    data_matrix_shuffled_train::AbstractArray{F, 3}
+    data_matrix_shuffled_train_bg::AbstractArray{F, 3}
     data_matrix_shuffled_test::AbstractArray{F, 3}
     data_matrix_shuffled_test_bg::AbstractArray{F, 3}
     function fullstack_dna_dataset{F}(
@@ -104,13 +108,15 @@ struct fullstack_dna_dataset{F}
         ) where {F <: Real}
         cdna_datasets = combined_dna_dataset{F}(dna_datasets)
         data_matrix, data_matrix_bg, 
-        data_matrix_shuffled, data_matrix_shuffled_bg, 
+        train_set_inds, test_set_inds,
+        data_matrix_shuffled_train, data_matrix_shuffled_train_bg, 
         data_matrix_shuffled_test, data_matrix_shuffled_test_bg = 
             make_data_matrices(cdna_datasets; 
                 train_test_ratio=train_test_ratio, k_freq=kmer_bg_freq)
         new(cdna_datasets, 
             data_matrix, data_matrix_bg,
-            data_matrix_shuffled, data_matrix_shuffled_bg, 
+            train_set_inds, test_set_inds,
+            data_matrix_shuffled_train, data_matrix_shuffled_train_bg, 
             data_matrix_shuffled_test, data_matrix_shuffled_test_bg)
     end
 end
