@@ -1,3 +1,10 @@
+"""
+obtain_dna_heads_and_dna_reads
+
+    return:
+        dna_heads: header of all the fasta sequences (Vector)
+        dna_reads: dna strings
+"""
 function obtain_dna_heads_and_dna_reads(fastapath::String)
     f = open(fastapath)
     reads = read(f, String)
@@ -13,11 +20,20 @@ function obtain_dna_heads_and_dna_reads(fastapath::String)
             push!(dna_reads, this_read);
         end
     end
+    @assert length(unique(length.(dna_reads)) ) == 1 "length of all dna string must be the same"
     return dna_heads, dna_reads
 end
 
+
 """
-trim the dna reads on both sides by n bases
+trim_dna_reads!
+trim the dna reads on both sides by n bases; 
+get rid of reads that contain n or N in the shortened read
+
+    return:
+        dna_heads: header of all the fasta sequences (Vector) that are kept
+        dna_reads: trimmed dna sequences
+        len: len of reads after trimming
 """
 function trim_dna_reads!(dna_reads::Vector{String}, dna_heads::Vector{String}, n::Int)
     keep = falses(length(dna_reads))
@@ -37,6 +53,13 @@ function trim_dna_reads!(dna_reads::Vector{String}, dna_heads::Vector{String}, n
     return dna_heads, dna_reads, len
 end
 
+"""
+
+construction of dna_data object:
+    1. read the dna_heads and dna_reads for each path (String)
+    2. trim if it is needed
+"""
+
 struct dna_data
     dna_heads::AbstractVector{String}
     dna_reads::AbstractVector{String}
@@ -49,6 +72,10 @@ struct dna_data
 end
 
 """
+dna_datasets: Vector of dna_data
+read_range: e.g. dataset A has 500 reads, dataset B has 1000 reads, get Dict(1=>1:500, 2=>501:1500)
+L: length of the sequence for all the datasets (yes, they must have the same length)
+
 combined the dna reads from all datasets
 following the order of the input dna_datasets
 useful for 
@@ -91,6 +118,16 @@ function make_data_matrices(cdna_datasets; train_test_ratio=0.9, k_freq=1)
            data_matrix_shuffled_train, data_matrix_shuffled_train_bg, 
            data_matrix_shuffled_test, data_matrix_shuffled_test_bg
 end
+
+
+"""
+fullstack_dna_dataset
+    cdna_datasets contains: 
+        dna_datasets:vector of dna_data (ATCGs from different datasets)
+        read_range: each dataset's range indices 
+        L: length of all the sequences in these datasets
+
+"""
 
 struct fullstack_dna_dataset{F}
     cdna_datasets::combined_dna_dataset{F}

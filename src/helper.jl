@@ -40,6 +40,12 @@ function get_range_dataset(dna_datasets)
     return read_range
 end
 
+
+
+"""
+    get_all_reads
+    
+"""
 function get_all_reads(cdna_datasets::combined_dna_dataset) 
     cat_reads = reduce(vcat, 
         [i.dna_reads for i in cdna_datasets.dna_datasets])
