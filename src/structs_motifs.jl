@@ -64,7 +64,7 @@ struct dna_data
     dna_heads::AbstractVector{String}
     dna_reads::AbstractVector{String}
     len::Int
-    function dna_data(fastapath::String; trim::Int=10)
+    function dna_data(fastapath::String; trim::Int=0)
         dna_heads, dna_reads = obtain_dna_heads_and_dna_reads(fastapath)
         dna_heads, dna_reads, len = trim_dna_reads!(dna_reads, dna_heads, trim)
         new(dna_heads, dna_reads, len)
@@ -109,10 +109,10 @@ function make_data_matrices(cdna_datasets; train_test_ratio=0.9, k_freq=1)
         get_shuffled_train_test_inds(cat_reads; gamma=train_test_ratio)
     data_matrix = data_2_dummy(cat_reads);
     data_matrix_bg = data_2_dummy(seq_shuffle.(cat_reads, k=k_freq))
-    data_matrix_shuffled_train      = @view data_matrix[:, :, train_set_inds]
-    data_matrix_shuffled_train_bg   = @view data_matrix_bg[:, :, train_set_inds]
-    data_matrix_shuffled_test       = @view data_matrix[:, :, test_set_inds]
-    data_matrix_shuffled_test_bg    = @view data_matrix_bg[:, :, test_set_inds]
+    data_matrix_shuffled_train      = @view data_matrix[:, :, :, train_set_inds]
+    data_matrix_shuffled_train_bg   = @view data_matrix_bg[:, :, :, train_set_inds]
+    data_matrix_shuffled_test       = @view data_matrix[:, :, :, test_set_inds]
+    data_matrix_shuffled_test_bg    = @view data_matrix_bg[:, :, :, test_set_inds]
     return data_matrix, data_matrix_bg, 
            train_set_inds, test_set_inds,
            data_matrix_shuffled_train, data_matrix_shuffled_train_bg, 
@@ -131,14 +131,14 @@ fullstack_dna_dataset
 
 struct fullstack_dna_dataset{F}
     cdna_datasets::combined_dna_dataset{F}
-    data_matrix_full::Array{F, 3}
-    data_matrix_bg::Array{F, 3}
+    data_matrix_full::Array{F, 4}
+    data_matrix_bg::Array{F, 4}
     train_set_inds::Vector{Int}
     test_set_inds::Vector{Int}
-    data_matrix_shuffled_train::AbstractArray{F, 3}
-    data_matrix_shuffled_train_bg::AbstractArray{F, 3}
-    data_matrix_shuffled_test::AbstractArray{F, 3}
-    data_matrix_shuffled_test_bg::AbstractArray{F, 3}
+    data_matrix_shuffled_train::AbstractArray{F, 4}
+    data_matrix_shuffled_train_bg::AbstractArray{F, 4}
+    data_matrix_shuffled_test::AbstractArray{F, 4}
+    data_matrix_shuffled_test_bg::AbstractArray{F, 4}
     function fullstack_dna_dataset{F}(
         dna_datasets::Vector{dna_data},
         train_test_ratio=0.9, kmer_bg_freq=1

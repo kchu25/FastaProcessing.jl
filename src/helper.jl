@@ -1,8 +1,9 @@
 function dna2dummy(dna_string::String, dummy::Dict; F=Float32)
-    v = Array{F,1}(undef, 4*length(dna_string));
+    v = Array{F,2}(undef, (4, length(dna_string)));
     @inbounds for (index, alphabet) in enumerate(dna_string)
-        start = (index-1)*4+1;
-        v[start:start+3] = dummy[uppercase(alphabet)];
+        # start = (index-1)*4+1;
+        # v[start:start+3] = dummy[uppercase(alphabet)];
+        v[:,index] = dummy[uppercase(alphabet)];
     end
     return v
 end
@@ -15,11 +16,10 @@ function data_2_dummy(dna_strings; F = Float32)
     how_many_strings = length(dna_strings);
     @assert how_many_strings != 0 "There aren't DNA strings found in the input";
     _len_ = length(dna_strings[1]); # length of each dna string in data    
-    _S_ = Array{F, 3}(undef, (4*_len_, 1, how_many_strings));
+    _S_ = Array{F, 4}(undef, (4, _len_, 1, how_many_strings));
     @inbounds for i = 1:how_many_strings
-        if length(dna_strings[i]) == _len_ 
-            _S_[:, 1, i] = dna2dummy(dna_strings[i], dummy; F=F)
-        end
+        @assert length(dna_strings[i]) == _len_ "DNA strings must be same length in the dataset"
+        _S_[:, :, 1, i] = dna2dummy(dna_strings[i], dummy; F=F)
     end
     return _S_
 end
@@ -32,7 +32,7 @@ return Dict(1=>1:500, 2=>501:1500)
 """
 function get_range_dataset(dna_datasets)
     cum_len = [length(dna_datasets[i].dna_reads) 
-                    for i in 1:length(dna_datasets)] |> cumsum
+                    for i in eachindex(dna_datasets)] |> cumsum
     read_range = Dict(1:cum_len[1]=>1)
     for i in 2:length(dna_datasets)
         read_range[cum_len[i-1]+1:cum_len[i]] = i

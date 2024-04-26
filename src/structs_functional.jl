@@ -70,12 +70,12 @@ end
 
 struct functional_data{F}
     data::Union{multi_2_one_dna_dataset, multi_2_multi_dna_dataset}
-    data_matrices_full::Vector{Array{F, 3}}
+    data_matrices_full::Vector{Array{F, 4}}
     train_set_inds::Vector{Int}
     test_set_inds::Vector{Int}
-    data_matrices_shuffled_train::Vector{AbstractArray{F, 3}}
+    data_matrices_shuffled_train::Vector{AbstractArray{F, 4}}
     labels_shuffled_train::Union{AbstractArray{F,1}, Vector{Vector{F}}}
-    data_matrices_shuffled_test::Vector{AbstractArray{F, 3}}
+    data_matrices_shuffled_test::Vector{AbstractArray{F, 4}}
     labels_shuffled_test::Union{AbstractArray{F,1}, Vector{Vector{F}}}
     function functional_data{F}(
         m2one::multi_2_one_dna_dataset
@@ -83,8 +83,8 @@ struct functional_data{F}
         data_matrices_full = [data_2_dummy(i.dna_reads) for i in m2one.dna_datasets];
         train_set_inds, test_set_inds = 
             get_shuffled_train_test_inds(m2one.dna_datasets[1].dna_reads; gamma=train_test_ratio)
-        data_matrices_shuffled_train = [@view i[:, :, train_set_inds] for i in data_matrices_full]
-        data_matrices_shuffled_test  = [@view i[:, :, test_set_inds] for i in data_matrices_full]
+        data_matrices_shuffled_train = [@view i[:, :, :, train_set_inds] for i in data_matrices_full]
+        data_matrices_shuffled_test  = [@view i[:, :, :, test_set_inds] for i in data_matrices_full]
         labels_shuffled_train = @view m2one.labels.vals[train_set_inds]
         labels_shuffled_test = @view m2one.labels.vals[test_set_inds]
         new(m2one, data_matrices_full, train_set_inds, test_set_inds,
@@ -97,8 +97,8 @@ struct functional_data{F}
         data_matrices_full = [data_2_dummy(i.dna_reads) for i in m2m.dna_datasets];
         train_set_inds, test_set_inds = 
             get_shuffled_train_test_inds(m2m.dna_datasets[1].dna_reads; gamma=train_test_ratio)
-        data_matrices_shuffled_train = [@view i[:, :, train_set_inds] for i in data_matrices_full]
-        data_matrices_shuffled_test  = [@view i[:, :, test_set_inds] for i in data_matrices_full]
+        data_matrices_shuffled_train = [@view i[:, :, :, train_set_inds] for i in data_matrices_full]
+        data_matrices_shuffled_test  = [@view i[:, :, :, test_set_inds] for i in data_matrices_full]
         labels_shuffled_train = [i.vals[train_set_inds] for i in m2m.labels]
         labels_shuffled_test = [i.vals[test_set_inds] for i in m2m.labels]
         new(m2m, data_matrices_full, train_set_inds, test_set_inds,
@@ -115,8 +115,8 @@ struct functional_data{F}
         data_matrices_full = [data_2_dummy(i.dna_reads) for i in m2one.dna_datasets];
         train_set_inds, test_set_inds = 
             get_shuffled_train_test_inds(m2one.dna_datasets[1].dna_reads; gamma=train_test_ratio)
-        data_matrices_shuffled_train = [@view i[:, :, train_set_inds] for i in data_matrices_full]
-        data_matrices_shuffled_test  = [@view i[:, :, test_set_inds] for i in data_matrices_full]
+        data_matrices_shuffled_train = [@view i[:, :, :, train_set_inds] for i in data_matrices_full]
+        data_matrices_shuffled_test  = [@view i[:, :, :, test_set_inds] for i in data_matrices_full]
         labels_shuffled_train = @view m2one.labels.vals[train_set_inds]
         labels_shuffled_test = @view m2one.labels.vals[test_set_inds]
         new(m2one, data_matrices_full, train_set_inds, test_set_inds,
@@ -135,15 +135,14 @@ struct functional_data{F}
             data_matrices_full = [data_2_dummy(i.dna_reads) for i in m2m.dna_datasets];
             train_set_inds, test_set_inds = 
                 get_shuffled_train_test_inds(m2m.dna_datasets[1].dna_reads; gamma=train_test_ratio)
-            data_matrices_shuffled_train = [@view i[:, :, train_set_inds] for i in data_matrices_full]
-            data_matrices_shuffled_test  = [@view i[:, :, test_set_inds] for i in data_matrices_full]
+            data_matrices_shuffled_train = [@view i[:, :, :, train_set_inds] for i in data_matrices_full]
+            data_matrices_shuffled_test  = [@view i[:, :, :, test_set_inds] for i in data_matrices_full]
             labels_shuffled_train = [i.vals[train_set_inds] for i in m2m.labels]
             labels_shuffled_test = [i.vals[test_set_inds] for i in m2m.labels]
             new(m2m, data_matrices_full, train_set_inds, test_set_inds,
                 data_matrices_shuffled_train, labels_shuffled_train,
                 data_matrices_shuffled_test, labels_shuffled_test)
     end
-
 end
 
 # TODO save the data
